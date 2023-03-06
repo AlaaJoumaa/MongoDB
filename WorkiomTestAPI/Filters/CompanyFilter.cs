@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using WorkiomTestAPI.Domain.DTOs;
 
 namespace WorkiomTestAPI.Filters
 {
@@ -8,5 +9,6 @@ namespace WorkiomTestAPI.Filters
         public string Id { get; set; }
         public string Name { get; set; }
         public int? NumberOfEmployees { get; set; }
+        public ICollection<ExtendColumn> ExtendColumns { get; set; }
     }
 }

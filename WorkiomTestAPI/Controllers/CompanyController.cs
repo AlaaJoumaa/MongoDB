@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using WorkiomTestAPI.Domain.DTOs;
 using WorkiomTestAPI.Domain.Entities;
@@ -69,15 +70,24 @@ namespace WorkiomTestAPI.Controllers
         {
             try
             {
-                var filter = Builders<Company>.Filter.Empty;
+                var filter = Builders<BsonDocument>.Filter.Empty;
                 if (!string.IsNullOrWhiteSpace(companyFilter.Id))
-                    filter &= Builders<Company>.Filter.Eq("_id", companyFilter.Id);
+                    filter &= Builders<BsonDocument>.Filter.Eq("_id", companyFilter.Id);
                 if (!string.IsNullOrWhiteSpace(companyFilter.Name))
-                    filter &= Builders<Company>.Filter.Eq(x => x.Name, companyFilter.Name);
+                    filter &= Builders<BsonDocument>.Filter.Eq(nameof(Company.Name), companyFilter.Name);
                 if (companyFilter.NumberOfEmployees > 0)
-                    filter &= Builders<Company>.Filter.Eq(x => x.NumberOfEmployees, companyFilter.NumberOfEmployees);
+                    filter &= Builders<BsonDocument>.Filter.Eq(nameof(Company.NumberOfEmployees), companyFilter.NumberOfEmployees);
 
-                var result = await (await _mongoCollection.FindAsync(filter)).ToListAsync();
+                if (companyFilter.ExtendColumns != null && companyFilter.ExtendColumns.Count > 0)
+                {
+                    foreach (var extendColumn in companyFilter.ExtendColumns)
+                    {
+                        filter &= Builders<BsonDocument>.Filter.EqType(extendColumn.Name, extendColumn.Value, extendColumn.Type);
+                    }
+                }
+                var result = (await (await _bsonMongoCollection.FindAsync(filter)).ToListAsync())
+                                                               .Select(x => BsonSerializer.Deserialize<dynamic>(x))
+                                                               .ToList();
 
                 return new JsonResult(result);
             }

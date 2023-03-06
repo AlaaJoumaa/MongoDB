@@ -10,5 +10,6 @@ namespace WorkiomTestAPI.Filters
         public string Id { get; set; }
         public string Name { get; set; }
         public ICollection<RefId> Companies { get; set; }
+        public ICollection<ExtendColumn> ExtendColumns { get; set; }
     }
 }
